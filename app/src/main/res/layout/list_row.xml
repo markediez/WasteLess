@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_centerHorizontal="true">
+
+        <ImageView
+            android:id="@+id/ivStatus"
+            android:background="@drawable/circle"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_margin="@dimen/norm"
+            />
+
+        <TextView
+            android:id="@+id/tvIngredient"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:gravity="center_vertical"
+            android:text="Test"
+            android:textColor="@color/bright"
+            android:textSize="28dp"
+            android:layout_toEndOf="@+id/ivStatus"
+            android:layout_below="@+id/tvExpire"
+            android:layout_toRightOf="@+id/ivStatus"
+            android:layout_alignBottom="@+id/ivStatus"
+            android:layout_alignRight="@+id/tvExpire"
+            android:layout_alignEnd="@+id/tvExpire" />
+        <TextView
+            android:id="@+id/tvExpire"
+            android:layout_width="fill_parent"
+            android:gravity="right"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginRight="@dimen/norm"
+            android:text="Expires:"
+            android:textSize="12dp"
+            android:textStyle="italic"
+            android:textColor="@color/white"
+            android:layout_toEndOf="@+id/ivStatus"/>
+
+</RelativeLayout>
