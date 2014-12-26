@@ -6,21 +6,27 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 
 public class MainActivity extends ListActivity implements View.OnClickListener {
-    final int EXPIRES = 19;
+    // Global Variables
     final int ADD = 0;
     ImageView add;
     EditText foodField;
+    Food newFood, myFood;
+    ArrayList<String> keyList;
     ArrayList<String> foodList;
     ArrayList<String> expireList;
     WasteAdapter adapter;
@@ -34,7 +40,40 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         init();
         adapter = new WasteAdapter(MainActivity.this, foodList, expireList);
         setListAdapter(adapter);
+        listFeatures();
 
+    }
+    // *******************************************************************
+    // Handles list functions/features
+    // pre: list exists and initialized
+    // post: longclick deletes
+    // *******************************************************************
+    private void listFeatures() {
+        // Deletes list item on long click
+        getListView().setOnItemLongClickListener(
+                new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent,
+                                     View view, int position, long id) {
+                pref.edit().remove(keyList.get(position)).apply();          // Remove chosen object from SharedPreferences
+                keyList.remove(position);                                   // Remove key from list
+                foodList.remove(position);                                  // Removes food
+                expireList.remove(position);                                //          from ListView
+
+                // Creates the new set of keys
+                Set<String> keySet = new TreeSet<String>();
+                for (String keys : keyList)
+                    keySet.add(keys);
+
+                // Save to user preference
+                pref.edit().putStringSet("foodList", keySet).apply();       // Save new key set
+                adapter.notifyDataSetChanged();                             // Updates the List
+                Toast.makeText(MainActivity.this, "Removed",                // Notifies User
+                        Toast.LENGTH_SHORT).show();
+
+                return true;
+            }
+        });
     }
 
     // *******************************************************************
@@ -48,9 +87,11 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
             case R.id.ivAdd:
                 String b = foodField.getText().toString();
                 if (!b.matches("")) {
-                    startActivityForResult(new Intent(MainActivity.this, AddFood.class), ADD);
+                    startActivityForResult(new Intent(MainActivity.this,
+                            AddFood.class), ADD);
                 }   else {
-                    Toast.makeText(MainActivity.this, "Food field empty!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Food field empty!"
+                            , Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
@@ -62,21 +103,32 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // post: appropriate function occurs based on request code and result
     // *******************************************************************
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    Intent data) {
         if (resultCode == RESULT_OK) {
             switch(requestCode) {
                 case ADD:
+                    // Generate unique key
+                    Calendar cal = Calendar.getInstance();                      // Get Calendar
+                    String userKey = cal.getTime().toString();                  // Generate Key
 
                     int date[] = data.getIntArrayExtra("date");
                     String userFood, userExpire;
 
                     // add to array list
-                    userFood = foodField.getText().toString().toUpperCase();
-                    userExpire = "Expires: " + date[0] + "/" + date[1] + "/" + date[2]
-                                    + expireList.size();
+                    userFood = foodField.getText().toString()
+                            .toUpperCase();
+                    userExpire = "Expires: " + date[0] + "/" + date[1]
+                            + "/" + date[2];
                     // add expire in this line
                     foodList.add(userFood);
                     expireList.add(userExpire);
+                    Toast.makeText(MainActivity.this, userKey,
+                            Toast.LENGTH_SHORT).show();
+
+                    // Create new food object
+                    newFood = new Food(userFood, userKey,
+                            date[0], date[1], date[2]);
 
                     foodField.setText("");
                     adapter.notifyDataSetChanged();
@@ -95,34 +147,29 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         foodField = (EditText)findViewById(R.id.etFood);
         foodList = new ArrayList<String>();
         expireList = new ArrayList<String>();
+        keyList = new ArrayList<String>();
 
-        // Sets saved food if exists
-        Set<String> getFood;
-        getFood = getFoodList();
-        for (String meal : getFood)
-            foodList.add(meal);
+        Set<String> getKeys = getFoodList();
+        for (String key : getKeys) {
+            myFood = getFood(key);
 
-        // Grabs corresponding expiration
-        String expireString = getExpireString();
-        StringTokenizer st = new StringTokenizer(expireString, ",");
-
-        while (st.hasMoreElements()) {
-            expireList.add(st.nextToken());
+            if (myFood.eYear() != 0) {
+                foodList.add(myFood.specify());
+                String expireDate = "Expires: " +
+                                    myFood.eMonth() + "/" +
+                                    myFood.eDay() + "/" +
+                                    myFood.eYear();
+                expireList.add(expireDate);
+                keyList.add(key);
+            }
         }
     }
 
     // *******************************************************************
-    // Returns food data
+    // Retrieves food keys
     // *******************************************************************
     private Set<String> getFoodList() {
         return pref.getStringSet("foodList", new TreeSet<String>());
-    }
-
-    // *******************************************************************
-    // Returns expiration data
-    // *******************************************************************
-    private String getExpireString() {
-        return pref.getString("expireString", new String());
     }
 
     // *******************************************************************
@@ -131,26 +178,35 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // post: data for foodList and expireList is saved to preferences
     // *******************************************************************
     private void saveList() {
-        Set<String> foodSet = new TreeSet<String>();
-        Set<String> expireSet = new TreeSet<String>();
-        StringBuilder sb = new StringBuilder();
+        // Saving food object using Gson library
+        Food saveFood = newFood;
+        Gson gson = new Gson();
+        String json = gson.toJson(saveFood);
+        Set<String> keySet = new TreeSet<String>();
+        keyList.add(saveFood.getKey());                                         // Stores keys
 
-        for (String food : foodList)
-            foodSet.add(food);
+        for(String keys : keyList)
+            keySet.add(keys);
 
-        for (String expire : expireList)
-            expireSet.add(expire);
+        pref.edit().putString(saveFood.getKey(), json).apply();                 // Saves food
+        pref.edit().putStringSet("foodList", keySet).apply();                   // Saves keys
+    }
 
-        for (String eSave : expireSet) {
-            // removes added chars from when turned to an ArrayList
-            eSave = eSave.substring(0, EXPIRES);
-            sb.append(eSave + ",");
-        }
+    /*
+     Returns food object
+     pre: An unused foodkey is passed
+     post: Food object is returned
+     */
+    private Food getFood(String key) {
+        Gson gson = new Gson();
+        String json = pref.getString(key, null);
+        Food food;
+        if(json == null)
+            food = new Food("Nulled","rando",0,0,0);
+        else
+            food = gson.fromJson(json, Food.class);
 
-        // Saves to preferences
-        pref.edit().putStringSet("foodList", foodSet).apply();
-        pref.edit().putString("expireString", sb.toString()).apply();
-
+        return food;
     }
 
 

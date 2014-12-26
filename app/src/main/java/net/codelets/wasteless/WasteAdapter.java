@@ -63,8 +63,6 @@ public class WasteAdapter extends BaseAdapter {
         } else {
             String ingredient = data.get(position);
             String expiration = expireData.get(position);
-            // cuts characters after the date
-            expiration = expiration.substring(0, 19);
             // displays ingredient and date
             holder.theFood.setText(ingredient);
             holder.theExpire.setText(expiration);
