@@ -67,10 +67,6 @@ public class WasteAdapter extends BaseAdapter {
             holder.theFood.setText(ingredient);
             holder.theExpire.setText(expiration);
         }
-
-        // Sets background color of ListView
-      //  vi.setBackgroundColor(activity.getResources().getColor(R.color.green));
-
         return vi;
     }
 }

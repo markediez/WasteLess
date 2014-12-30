@@ -17,11 +17,11 @@
         android:layout_alignEnd="@+id/imageView"/>
 
     <ImageView
-        android:id="@+id/ivFind"
+        android:id="@+id/ivSetting"
         android:layout_width="@dimen/button_size"
         android:layout_height="@dimen/button_size"
         android:clickable="true"
-        android:src="@drawable/selector_find"
+        android:src="@drawable/selector_settings"
          />
 
     <ImageView
@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="100dp"
         android:src="@drawable/wasteless_logo"
-        android:layout_toEndOf="@+id/ivFind"
+        android:layout_toEndOf="@+id/ivSetting"
         android:layout_alignParentTop="true"
         android:layout_alignRight="@android:id/list"
         android:layout_alignEnd="@android:id/list"

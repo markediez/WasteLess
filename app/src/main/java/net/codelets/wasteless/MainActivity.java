@@ -1,6 +1,8 @@
 package net.codelets.wasteless;
 
+import android.app.AlarmManager;
 import android.app.ListActivity;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,14 +18,15 @@ import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 
 public class MainActivity extends ListActivity implements View.OnClickListener {
     // Global Variables
     final int ADD = 0;
-    ImageView add;
+    final int SET = 1;
+    int h, m;
+    ImageView add, set;
     EditText foodField;
     Food newFood, myFood;
     ArrayList<String> keyList;
@@ -84,6 +87,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     @Override
     public void onClick (View v) {
         switch(v.getId()) {
+            case R.id.ivSetting:
+                startActivityForResult(new Intent(MainActivity.this, Settings.class), SET);
+                break;
             case R.id.ivAdd:
                 String b = foodField.getText().toString();
                 if (!b.matches("")) {
@@ -107,6 +113,18 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                                     Intent data) {
         if (resultCode == RESULT_OK) {
             switch(requestCode) {
+                case SET:
+                    // grabs new time
+                    h = data.getIntExtra("hour", h);
+                    m = data.getIntExtra("min", m);
+                    // sets new time
+                    setAlarmDaily(h,m);
+                    // saves new time
+                    pref.edit().putInt("hour", h).apply();
+                    pref.edit().putInt("min", m).apply();
+
+                    Toast.makeText(MainActivity.this, "Updated", Toast.LENGTH_SHORT).show();
+                    break;
                 case ADD:
                     // Generate unique key
                     Calendar cal = Calendar.getInstance();                      // Get Calendar
@@ -143,7 +161,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // *******************************************************************
     private void init() {
         add = (ImageView)findViewById(R.id.ivAdd);
-        add.setOnClickListener(this);
+        set = (ImageView)findViewById(R.id.ivSetting);
+        set.setOnClickListener(MainActivity.this);
+        add.setOnClickListener(MainActivity.this);
         foodField = (EditText)findViewById(R.id.etFood);
         foodList = new ArrayList<String>();
         expireList = new ArrayList<String>();
@@ -192,11 +212,39 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         pref.edit().putStringSet("foodList", keySet).apply();                   // Saves keys
     }
 
-    /*
-     Returns food object
-     pre: An unused foodkey is passed
-     post: Food object is returned
-     */
+    // *******************************************************************
+    // This function sets the alarm.
+    // *******************************************************************
+    public void setAlarmDaily(int h, int m) {
+        // set an alarm a minute from open
+        Calendar currentCal = Calendar.getInstance();
+        Calendar alarmCal = Calendar.getInstance();
+        alarmCal.set(Calendar.HOUR_OF_DAY, h);
+        alarmCal.set(Calendar.MINUTE, m);
+        alarmCal.set(Calendar.SECOND, 0);
+
+        Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, 6275, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarm = (AlarmManager)getSystemService(ALARM_SERVICE);
+        long currenTime = currentCal.getTimeInMillis();
+        long wantedTime = alarmCal.getTimeInMillis();
+
+        // if time already passed, wait till tomorrow
+        if (wantedTime <= currenTime) {
+            alarmCal.add(Calendar.DAY_OF_MONTH, 1);
+            wantedTime = alarmCal.getTimeInMillis();
+        }
+
+        // set daily
+        alarm.setRepeating(AlarmManager.RTC_WAKEUP, wantedTime, AlarmManager.INTERVAL_DAY, pi);
+
+    }
+
+    // *******************************************************************
+    // Returns food object
+    // pre: An unused foodkey is passed
+    // post: Food object is returned
+    // *******************************************************************
     private Food getFood(String key) {
         Gson gson = new Gson();
         String json = pref.getString(key, null);
