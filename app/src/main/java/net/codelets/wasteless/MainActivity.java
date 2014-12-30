@@ -26,7 +26,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     final int ADD = 0;
     final int SET = 1;
     int h, m;
-    ImageView add, set;
+    ImageView add, set, help;
     EditText foodField;
     Food newFood, myFood;
     ArrayList<String> keyList;
@@ -87,6 +87,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     @Override
     public void onClick (View v) {
         switch(v.getId()) {
+            case R.id.ivHelp:
+                startActivity(new Intent(MainActivity.this, Help.class));
+                break;
             case R.id.ivSetting:
                 startActivityForResult(new Intent(MainActivity.this, Settings.class), SET);
                 break;
@@ -141,8 +144,6 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     // add expire in this line
                     foodList.add(userFood);
                     expireList.add(userExpire);
-                    Toast.makeText(MainActivity.this, userKey,
-                            Toast.LENGTH_SHORT).show();
 
                     // Create new food object
                     newFood = new Food(userFood, userKey,
@@ -162,6 +163,8 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     private void init() {
         add = (ImageView)findViewById(R.id.ivAdd);
         set = (ImageView)findViewById(R.id.ivSetting);
+        help = (ImageView)findViewById(R.id.ivHelp);
+        help.setOnClickListener(MainActivity.this);
         set.setOnClickListener(MainActivity.this);
         add.setOnClickListener(MainActivity.this);
         foodField = (EditText)findViewById(R.id.etFood);
