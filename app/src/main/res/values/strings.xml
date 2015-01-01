@@ -2,11 +2,12 @@
 <resources>
 
     <string name="app_name">Waste Less</string>
-    <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_notification">Notification</string>
     <string name="settings">Adjust the time for daily notification.</string>
     <string name="add">Add new food.</string>
     <string name="hold">Long press to delete.</string>
+    <string name="tap">Tap to view more or edit.</string>
+    <string name="filler">Filler</string>
 
 </resources>

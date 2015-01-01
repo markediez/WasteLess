@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/norm">
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/header"
+        android:text="@string/filler"
+        />
+    <TextView
+        android:id="@+id/tvExpiration"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/norm"
+        android:layout_toRightOf="@+id/tvTitle"
+        android:layout_alignBottom="@+id/tvTitle"
+        android:layout_alignTop="@+id/tvTitle"
+        android:gravity="bottom"
+        android:text="Best by "/>
+
+</RelativeLayout>

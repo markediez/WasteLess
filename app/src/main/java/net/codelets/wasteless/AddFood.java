@@ -32,7 +32,7 @@ public class AddFood extends Activity implements View.OnClickListener {
                 int month, day, year;
 
                 final DatePicker expire = (DatePicker)findViewById(R.id.dtExpire);
-                month = expire.getMonth() + 1;
+                month = expire.getMonth();
                 day = expire.getDayOfMonth();
                 year = expire.getYear();
 

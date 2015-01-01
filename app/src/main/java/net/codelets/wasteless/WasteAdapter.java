@@ -40,6 +40,7 @@ public class WasteAdapter extends BaseAdapter {
     // Holds data
     public static class ViewHolder {
         public TextView theFood, theExpire;
+        public String key;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {

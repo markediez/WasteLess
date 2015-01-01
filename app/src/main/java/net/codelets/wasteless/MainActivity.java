@@ -15,8 +15,10 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -25,6 +27,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // Global Variables
     final int ADD = 0;
     final int SET = 1;
+    final int EDIT = 2;
     int h, m;
     ImageView add, set, help;
     EditText foodField;
@@ -52,6 +55,17 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // post: longclick deletes
     // *******************************************************************
     private void listFeatures() {
+        // Inflates item on tap
+        getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                String itemKey = keyList.get(position);
+                Intent i = new Intent(MainActivity.this, CloseUp.class);
+                i.putExtra("itemKey", itemKey);
+                startActivityForResult(i, EDIT);
+            }
+        });
+
         // Deletes list item on long click
         getListView().setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
@@ -116,6 +130,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                                     Intent data) {
         if (resultCode == RESULT_OK) {
             switch(requestCode) {
+                case EDIT:
+                    Toast.makeText(MainActivity.this, "Yup", Toast.LENGTH_SHORT).show();
+                    break;
                 case SET:
                     // grabs new time
                     h = data.getIntExtra("hour", h);
@@ -134,20 +151,20 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     String userKey = cal.getTime().toString();                  // Generate Key
 
                     int date[] = data.getIntArrayExtra("date");
-                    String userFood, userExpire;
+                    GregorianCalendar expire = new GregorianCalendar(date[2], date[0], date[1]);
+                    DateFormat df = DateFormat.getDateInstance();
 
                     // add to array list
+                    String userFood, userExpire;
                     userFood = foodField.getText().toString()
                             .toUpperCase();
-                    userExpire = "Expires: " + date[0] + "/" + date[1]
-                            + "/" + date[2];
+                    userExpire = "Expires: " + df.format(expire.getTime());
                     // add expire in this line
                     foodList.add(userFood);
                     expireList.add(userExpire);
 
                     // Create new food object
-                    newFood = new Food(userFood, userKey,
-                            date[0], date[1], date[2]);
+                    newFood = new Food(userFood, userKey, expire);
 
                     foodField.setText("");
                     adapter.notifyDataSetChanged();
@@ -174,17 +191,10 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
 
         Set<String> getKeys = getFoodList();
         for (String key : getKeys) {
-            myFood = getFood(key);
-
-            if (myFood.eYear() != 0) {
-                foodList.add(myFood.specify());
-                String expireDate = "Expires: " +
-                                    myFood.eMonth() + "/" +
-                                    myFood.eDay() + "/" +
-                                    myFood.eYear();
-                expireList.add(expireDate);
-                keyList.add(key);
-            }
+            myFood = getFood(key, pref);
+            foodList.add(myFood.specify());
+            expireList.add(myFood.expireString());
+            keyList.add(key);
         }
     }
 
@@ -248,12 +258,12 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // pre: An unused foodkey is passed
     // post: Food object is returned
     // *******************************************************************
-    private Food getFood(String key) {
+    public Food getFood(String key, SharedPreferences sp) {
         Gson gson = new Gson();
-        String json = pref.getString(key, null);
+        String json = sp.getString(key, null);
         Food food;
         if(json == null)
-            food = new Food("Nulled","rando",0,0,0);
+            food = new Food("Nulled","rando",null);
         else
             food = gson.fromJson(json, Food.class);
 
