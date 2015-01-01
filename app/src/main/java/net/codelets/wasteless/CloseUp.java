@@ -13,7 +13,7 @@ public class CloseUp extends Activity{
     String expireDate;
     SharedPreferences sp;
     Food food;
-    TextView title, expire;
+    TextView title, expire, reminder;
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
@@ -26,7 +26,7 @@ public class CloseUp extends Activity{
     // Sets the activity
     private void set() {
         title.setText(food.specify());
-        expire.setText("Best by " + expireDate );
+        expire.setText("Expires: " + expireDate );
     }
 
     // Initializes Variables
@@ -39,6 +39,8 @@ public class CloseUp extends Activity{
         // Set activity vars
         title = (TextView)findViewById(R.id.tvTitle);
         expire = (TextView)findViewById(R.id.tvExpiration);
+        reminder = (TextView)findViewById(R.id.tvReminder);
+
 
         // String for time
         expireDate = food.expireString();

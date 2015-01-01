@@ -9,5 +9,6 @@
     <string name="hold">Long press to delete.</string>
     <string name="tap">Tap to view more or edit.</string>
     <string name="filler">Filler</string>
+    <string name="edit">Edit</string>
 
 </resources>
