@@ -22,21 +22,20 @@ import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TreeSet;
 
+// TODO handle itemId to check if a notification with the ID exists or is set
 
 public class MainActivity extends ListActivity implements View.OnClickListener {
     // Global Variables
     final int ADD = 0;
     final int SET = 1;
     final int EDIT = 2;
-    int h, m;
-    ImageView add, set, help;
-    EditText foodField;
-    Food newFood, myFood;
-    ArrayList<String> keyList;
-    ArrayList<String> foodList;
-    ArrayList<String> expireList;
-    WasteAdapter adapter;
-    SharedPreferences pref;
+    private int h, m, itemId;
+    private ImageView add, set, help;
+    private EditText foodField;
+    private Food newFood, myFood;
+    private ArrayList<String> keyList, foodList, expireList;
+    private WasteAdapter adapter;
+    private SharedPreferences pref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,7 +163,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     expireList.add(userExpire);
 
                     // Create new food object
-                    newFood = new Food(userFood, userKey, expire);
+                    newFood = new Food(userFood, userKey, expire, itemId);
+                    itemId++;
+                    pref.edit().putInt("itemId", itemId);
 
                     foodField.setText("");
                     adapter.notifyDataSetChanged();
@@ -189,6 +190,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         expireList = new ArrayList<String>();
         keyList = new ArrayList<String>();
 
+        itemId = pref.getInt("itemId", 0);
+
+        // Retrieves food objects and fills arrays
         Set<String> getKeys = getFoodList();
         for (String key : getKeys) {
             myFood = getFood(key, pref);
@@ -234,9 +238,10 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         Calendar alarmCal = Calendar.getInstance();
         alarmCal.set(Calendar.HOUR_OF_DAY, h);
         alarmCal.set(Calendar.MINUTE, m);
-        alarmCal.set(Calendar.SECOND, 0);
+        alarmCal.set(Calendar.SECOND, 59);
 
         Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
+        alarmIntent.putExtra("alarm", 6275);
         PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, 6275, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarm = (AlarmManager)getSystemService(ALARM_SERVICE);
         long currenTime = currentCal.getTimeInMillis();
@@ -253,6 +258,15 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
 
     }
 
+    public void setAlarm(Food foodAlarm) {
+        int days = -7;
+        GregorianCalendar expires = foodAlarm.expireCal();
+        GregorianCalendar notificationDay = expires;
+        notificationDay.add(Calendar.DAY_OF_MONTH, days);
+        // TODO TEST THE COMPARISONS
+        int test = notificationDay.compareTo(expires);
+    }
+
     // *******************************************************************
     // Returns food object
     // pre: An unused foodkey is passed
@@ -263,7 +277,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         String json = sp.getString(key, null);
         Food food;
         if(json == null)
-            food = new Food("Nulled","rando",null);
+            food = new Food("Nulled","rando",null, -1);
         else
             food = gson.fromJson(json, Food.class);
 

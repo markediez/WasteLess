@@ -27,21 +27,80 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/tvExpiration"
         android:layout_marginTop="@dimen/activity_vertical_margin">
+
+        <!-- Time -->
         <TableRow>
         <TextView
-            android:id="@+id/tvReminder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Reminder:"
             />
+         <TextView
+             android:id="@+id/tvReminder"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:layout_weight="1"
+             android:text="Time"
+             />
          <Button
              android:id="@+id/bEditReminder"
              android:layout_width="wrap_content"
              android:layout_height="wrap_content"
              android:text="@string/edit"
              android:layout_weight="1"
+             android:visibility="visible"
              />
+        </TableRow>
+
+        <!-- Store -->
+        <TableRow>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Store:"
+                />
+            <TextView
+                android:id="@+id/tvStore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/noInput"
+                />
+            <Button
+                android:id="@+id/bEditStore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/edit"
+                android:layout_weight="1"
+                android:visibility="visible"
+                />
+        </TableRow>
+
+        <!-- Cost -->
+        <TableRow>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Cost:"
+                />
+            <TextView
+                android:id="@+id/tvCost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/noInput"
+                />
+            <Button
+                android:id="@+id/bEditCost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/edit"
+                android:layout_weight="1"
+                android:visibility="visible"
+                />
         </TableRow>
         </TableLayout>
 
