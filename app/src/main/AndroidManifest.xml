@@ -43,6 +43,9 @@
         </activity>
 
         <receiver android:name=".AlarmReceiver"/>
+        <receiver android:name=".Snooze"/>
+        <receiver android:name=".Dismiss"/>
+        <receiver android:name=".Individual"/>
     </application>
 
 

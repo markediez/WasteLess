@@ -15,14 +15,11 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Set;
 import java.util.TreeSet;
-
-// TODO handle itemId to check if a notification with the ID exists or is set
 
 public class MainActivity extends ListActivity implements View.OnClickListener {
     // Global Variables
@@ -33,7 +30,8 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     private ImageView add, set, help;
     private EditText foodField;
     private Food newFood, myFood;
-    private ArrayList<String> keyList, foodList, expireList;
+    private ArrayList<String> keyList;
+    private ArrayList<Food> foodArrayList;
     private WasteAdapter adapter;
     private SharedPreferences pref;
 
@@ -43,11 +41,12 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         init();
-        adapter = new WasteAdapter(MainActivity.this, foodList, expireList);
+        adapter = new WasteAdapter(MainActivity.this, foodArrayList);
         setListAdapter(adapter);
         listFeatures();
 
     }
+
     // *******************************************************************
     // Handles list functions/features
     // pre: list exists and initialized
@@ -58,10 +57,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                String itemKey = keyList.get(position);
-                Intent i = new Intent(MainActivity.this, CloseUp.class);
-                i.putExtra("itemKey", itemKey);
-                startActivityForResult(i, EDIT);
+                // TODO close up of ingredient
             }
         });
 
@@ -71,10 +67,10 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
             @Override
             public boolean onItemLongClick(AdapterView<?> parent,
                                      View view, int position, long id) {
-                pref.edit().remove(keyList.get(position)).apply();          // Remove chosen object from SharedPreferences
-                keyList.remove(position);                                   // Remove key from list
-                foodList.remove(position);                                  // Removes food
-                expireList.remove(position);                                //          from ListView
+                foodArrayList.get(position).clearAlarm(MainActivity.this, Individual.class);        // Remove alarm
+                pref.edit().remove(keyList.get(position)).apply();                                  // Remove chosen object from SharedPreferences
+                keyList.remove(position);                                                           // Remove key from list
+                foodArrayList.remove(position);                                                     // Remove FoodObject
 
                 // Creates the new set of keys
                 Set<String> keySet = new TreeSet<String>();
@@ -82,9 +78,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     keySet.add(keys);
 
                 // Save to user preference
-                pref.edit().putStringSet("foodList", keySet).apply();       // Save new key set
-                adapter.notifyDataSetChanged();                             // Updates the List
-                Toast.makeText(MainActivity.this, "Removed",                // Notifies User
+                pref.edit().putStringSet("foodList", keySet).apply();                               // Save new key set
+                adapter.notifyDataSetChanged();                                                     // Updates the List
+                Toast.makeText(MainActivity.this, "Removed",                                        // Notifies User
                         Toast.LENGTH_SHORT).show();
 
                 return true;
@@ -130,7 +126,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         if (resultCode == RESULT_OK) {
             switch(requestCode) {
                 case EDIT:
-                    Toast.makeText(MainActivity.this, "Yup", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Yup", Toast.LENGTH_SHORT).show();            // TODO for close up?
                     break;
                 case SET:
                     // grabs new time
@@ -146,30 +142,26 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     break;
                 case ADD:
                     // Generate unique key
-                    Calendar cal = Calendar.getInstance();                      // Get Calendar
-                    String userKey = cal.getTime().toString();                  // Generate Key
+                    Calendar cal = Calendar.getInstance();                                          // Get Calendar
+                    String userKey = cal.getTime().toString();                                      // Generate Key
 
                     int date[] = data.getIntArrayExtra("date");
                     GregorianCalendar expire = new GregorianCalendar(date[2], date[0], date[1]);
-                    DateFormat df = DateFormat.getDateInstance();
 
                     // add to array list
-                    String userFood, userExpire;
-                    userFood = foodField.getText().toString()
+                    String userFood = foodField.getText().toString()
                             .toUpperCase();
-                    userExpire = "Expires: " + df.format(expire.getTime());
-                    // add expire in this line
-                    foodList.add(userFood);
-                    expireList.add(userExpire);
-
                     // Create new food object
                     newFood = new Food(userFood, userKey, expire, itemId);
+                    foodArrayList.add(newFood);
+                    setAlarm(newFood);
                     itemId++;
                     pref.edit().putInt("itemId", itemId);
 
                     foodField.setText("");
                     adapter.notifyDataSetChanged();
                     saveList();
+                    Toast.makeText(MainActivity.this, "Added", Toast.LENGTH_SHORT).show();
                     break;
             }
         }
@@ -179,6 +171,8 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // Initiates variables and loads preferences
     // *******************************************************************
     private void init() {
+        h = pref.getInt("hour", 17);
+        m = pref.getInt("min", 0);
         add = (ImageView)findViewById(R.id.ivAdd);
         set = (ImageView)findViewById(R.id.ivSetting);
         help = (ImageView)findViewById(R.id.ivHelp);
@@ -186,8 +180,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         set.setOnClickListener(MainActivity.this);
         add.setOnClickListener(MainActivity.this);
         foodField = (EditText)findViewById(R.id.etFood);
-        foodList = new ArrayList<String>();
-        expireList = new ArrayList<String>();
+        foodArrayList = new ArrayList<Food>();
         keyList = new ArrayList<String>();
 
         itemId = pref.getInt("itemId", 0);
@@ -196,8 +189,7 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
         Set<String> getKeys = getFoodList();
         for (String key : getKeys) {
             myFood = getFood(key, pref);
-            foodList.add(myFood.specify());
-            expireList.add(myFood.expireString());
+            foodArrayList.add(myFood);
             keyList.add(key);
         }
     }
@@ -242,7 +234,9 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
 
         Intent alarmIntent = new Intent(MainActivity.this, AlarmReceiver.class);
         alarmIntent.putExtra("alarm", 6275);
-        PendingIntent pi = PendingIntent.getBroadcast(MainActivity.this, 6275, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent pi = PendingIntent
+                .getBroadcast(MainActivity.this, 6275,
+                        alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarm = (AlarmManager)getSystemService(ALARM_SERVICE);
         long currenTime = currentCal.getTimeInMillis();
         long wantedTime = alarmCal.getTimeInMillis();
@@ -258,13 +252,42 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
 
     }
 
+    // *******************************************************************
+    // Sets individual notifications
+    // pre: new food object is made
+    // post: a notification for the new food object is made
+    // *******************************************************************
     public void setAlarm(Food foodAlarm) {
+        // TODO set days = variable for customizeable notifications
         int days = -7;
-        GregorianCalendar expires = foodAlarm.expireCal();
-        GregorianCalendar notificationDay = expires;
-        notificationDay.add(Calendar.DAY_OF_MONTH, days);
-        // TODO TEST THE COMPARISONS
-        int test = notificationDay.compareTo(expires);
+        Calendar notificationTime, currTime;
+        notificationTime = foodAlarm.expireCal();
+        notificationTime.add(Calendar.DAY_OF_MONTH, days);
+        notificationTime.set(Calendar.HOUR, h);
+        notificationTime.set(Calendar.MINUTE, m);
+
+        Intent individual = new Intent(MainActivity.this, Individual.class);
+        individual.putExtra("notification", foodAlarm.getKey());
+
+        PendingIntent pIndividual = PendingIntent.getBroadcast(MainActivity.this, foodAlarm.getId(),
+                individual,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        currTime = Calendar.getInstance();
+
+        // Set notification closer if the food item expires in less than a week
+        while (notificationTime.compareTo(currTime) == -1) {
+            notificationTime.add(Calendar.DAY_OF_MONTH, 1);
+            if(notificationTime.get(Calendar.DAY_OF_MONTH) == currTime.get(Calendar.DAY_OF_MONTH)   // If its on the same day
+                    && notificationTime.get(Calendar.MONTH) == currTime.get(Calendar.MONTH)
+                    && notificationTime.get(Calendar.YEAR) == currTime.get(Calendar.YEAR)) {
+                break;                                                                              // Set alarm @ notification Time
+            }
+        }
+        // Set Notification
+        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, notificationTime.getTimeInMillis(),
+                AlarmManager.INTERVAL_DAY, pIndividual);
+
     }
 
     // *******************************************************************
@@ -283,7 +306,4 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
 
         return food;
     }
-
-
-
 }

@@ -15,18 +15,17 @@ import java.util.ArrayList;
  */
 public class WasteAdapter extends BaseAdapter {
     private Activity activity;
-    private ArrayList<String> data, expireData;
+    private ArrayList<Food> foodList;
     private LayoutInflater inflater;
 
-    public WasteAdapter (Activity a, ArrayList<String> d, ArrayList<String> dd) {
+    public WasteAdapter (Activity a, ArrayList<Food> f) {
         activity = a;
-        data = d;
-        expireData = dd;
+        foodList = f;
         inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
     public int getCount() {
-        return data.size();
+        return foodList.size();
     }
 
     public Object getItem (int position) {
@@ -40,7 +39,6 @@ public class WasteAdapter extends BaseAdapter {
     // Holds data
     public static class ViewHolder {
         public TextView theFood, theExpire;
-        public String key;
     }
 
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -57,16 +55,14 @@ public class WasteAdapter extends BaseAdapter {
             holder = (ViewHolder) vi.getTag();
         }
 
-        if (data.size() <= 0) {
+        if (foodList.size() <= 0) {
             // set holders
             holder.theFood.setText("Buy Groceries!");
             holder.theExpire.setText("n(-,-)n");
         } else {
-            String ingredient = data.get(position);
-            String expiration = expireData.get(position);
             // displays ingredient and date
-            holder.theFood.setText(ingredient);
-            holder.theExpire.setText(expiration);
+            holder.theFood.setText(foodList.get(position).specify());
+            holder.theExpire.setText(foodList.get(position).expireString());
         }
         return vi;
     }

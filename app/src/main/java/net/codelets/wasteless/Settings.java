@@ -1,6 +1,7 @@
 package net.codelets.wasteless;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -11,10 +12,12 @@ import android.widget.TimePicker;
  */
 public class Settings extends Activity {
     TimePicker userTime;
+    Context context;
     @Override
     protected  void onCreate(Bundle b) {
         super.onCreate(b);
         setContentView(R.layout.activity_settings);
+        context = getApplicationContext();
     }
 
     // Returns to main activity updating the time for notification
