@@ -9,8 +9,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
-import java.util.Calendar;
-
 /**
  * Created by MarkDiez on 1/11/15.
  */
@@ -19,7 +17,7 @@ public class Individual extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         // Grab food object
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
-        String key = intent.getStringExtra("individual");
+        String key = intent.getStringExtra("notification");
         MainActivity util = new MainActivity();
         Food notificationFood = util.getFood(key, sp);
 
@@ -37,12 +35,12 @@ public class Individual extends BroadcastReceiver {
                 nDismiss,PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Set up content for notification
-        int left = notificationFood.daysLeft(notificationFood.expireCal(), Calendar.getInstance());
+//        int left = notificationFood.daysLeft(notificationFood.expireCal(), Calendar.getInstance());
         String food = notificationFood.specify();
         String expire = food + " is about to expire!";
-        String content = "You have "+Integer.toString(left)+" days left!";
+        String content = "You have a few days left!";
         if(notificationFood.isExpired()) {                                                          // Change content when item is expired
-            expire = food + " is expired!";
+            expire = food + " has expired!";
             content = "Get rid of this item now!";
         }
         // Build notification

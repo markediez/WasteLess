@@ -53,14 +53,6 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
     // post: longclick deletes
     // *******************************************************************
     private void listFeatures() {
-        // Inflates item on tap
-        getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // TODO close up of ingredient
-            }
-        });
-
         // Deletes list item on long click
         getListView().setOnItemLongClickListener(
                 new AdapterView.OnItemLongClickListener() {
@@ -130,13 +122,17 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     break;
                 case SET:
                     // grabs new time
-                    h = data.getIntExtra("hour", h);
-                    m = data.getIntExtra("min", m);
+                    h = data.getIntExtra("hour", 17);
+                    m = data.getIntExtra("min", 0);
                     // sets new time
                     setAlarmDaily(h,m);
                     // saves new time
                     pref.edit().putInt("hour", h).apply();
                     pref.edit().putInt("min", m).apply();
+                    // updates the alarms
+                    for (Food updateFood : foodArrayList)
+                        updateFood.setTime(MainActivity.this, h, m);
+
 
                     Toast.makeText(MainActivity.this, "Updated", Toast.LENGTH_SHORT).show();
                     break;
@@ -146,15 +142,15 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                     String userKey = cal.getTime().toString();                                      // Generate Key
 
                     int date[] = data.getIntArrayExtra("date");
-                    GregorianCalendar expire = new GregorianCalendar(date[2], date[0], date[1]);
+                    GregorianCalendar expire = new GregorianCalendar(date[2], date[0], date[1],h,m);
 
                     // add to array list
                     String userFood = foodField.getText().toString()
                             .toUpperCase();
                     // Create new food object
                     newFood = new Food(userFood, userKey, expire, itemId);
-                    foodArrayList.add(newFood);
                     setAlarm(newFood);
+                    foodArrayList.add(newFood);
                     itemId++;
                     pref.edit().putInt("itemId", itemId);
 
@@ -283,11 +279,14 @@ public class MainActivity extends ListActivity implements View.OnClickListener {
                 break;                                                                              // Set alarm @ notification Time
             }
         }
+        // Set notification Calendar
+        foodAlarm.setNotify(notificationTime);
         // Set Notification
-        AlarmManager alarmManager = (AlarmManager)getSystemService(ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, notificationTime.getTimeInMillis(),
-                AlarmManager.INTERVAL_DAY, pIndividual);
-
+        if(notificationTime.getTimeInMillis() > currTime.getTimeInMillis()) {                       // No notification if time has passed
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, notificationTime.getTimeInMillis(),
+                    AlarmManager.INTERVAL_DAY, pIndividual);
+        }
     }
 
     // *******************************************************************
